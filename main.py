@@ -5,8 +5,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from database import Handler, Bot, init_db, Chat, User
-from utils import Connector
+from database import Bot, init_db, Chat, User
+from utils.connector import Connector
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -29,6 +29,7 @@ app.add_middleware(
 )
 ERROR = {"status": "error"}
 
+
 class AcptMessage(BaseModel):
     text: str
     chat_id: int
@@ -43,7 +44,6 @@ class AcptMessage(BaseModel):
 connector = Connector("send")
 
 
-@Handler.request_decorator
 @app.get("/bots")
 def get_bots():
     bots = Bot.get_all()
@@ -86,4 +86,3 @@ async def send_message(chat_id: int, msg: AcptMessage):
 #
 #     chat=Chat.get_chat(msg.chat_id)
 #     bot_id = chat.bot.messenger_id
-#     messe
