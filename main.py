@@ -1,6 +1,7 @@
 import logging
 from json import dumps
 
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -82,7 +83,11 @@ async def send_message(chat_id: int, msg: AcptMessage):
     else:
         return ERROR
 
-# def parse_msg(msg: AcptMessage):
-#
-#     chat=Chat.get_chat(msg.chat_id)
-#     bot_id = chat.bot.messenger_id
+
+@app.get("/updates/{user_id}")
+async def get_updates(user_id: int):
+    pass
+
+
+if __name__ == '__main__':
+    uvicorn.run(app, host="0.0.0.0", port=8000)
