@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from config import Config
 from database import Bot, init_db, Chat, User
 from utils.connector import Connector
 
@@ -42,7 +43,7 @@ class AcptMessage(BaseModel):
         return dumps({"text": self.text, "chat_id": self.chat_id, "time": self.time, "user_id": self.user_id})
 
 
-connector = Connector("send")
+connector = Connector("send", host=Config.RABBITMQ)
 
 
 @app.get("/bots")
