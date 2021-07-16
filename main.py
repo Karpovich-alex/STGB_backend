@@ -1,9 +1,11 @@
 import logging
 from json import dumps
 
+import aiohttp
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 from pydantic import BaseModel
 
 from config import Config
@@ -87,7 +89,13 @@ async def send_message(chat_id: int, msg: AcptMessage):
 
 @app.get("/updates/{user_id}")
 async def get_updates(user_id: int):
-    pass
+    async with aiohttp.ClientSession() as session:
+        async with session.get(f"{Config.UPDATER_URL}/{user_id}/info") as response:
+
+            if response.status == 502:
+                return Response(status_code=502)
+            else:
+                return await response.json()
 
 
 if __name__ == '__main__':
