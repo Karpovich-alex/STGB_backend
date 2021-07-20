@@ -116,7 +116,7 @@ class Checker:
             self._information.pop(user_id)
 
     def add_current_listener(self, user_id, loop):
-        # TODO: Add timeoit to store user_id
+        # TODO: Add timeout to store user_id
         fut = loop.create_future()
         self._current_listeners[user_id] = self._current_listeners.get(user_id, []) + [fut]
         return fut
