@@ -30,7 +30,7 @@ class Chat(BaseModel):
 
 class Checker:
     def __init__(self):
-        self._listeners = [2, ]
+        self._listeners = []
         self._information: Dict[int, Dict[int, List[Message]]] = {}
         self._current_listeners: Dict[int, List[asyncio.Future]] = {}
         self._info_lock = threading.RLock()

@@ -10,7 +10,7 @@ from utils.connector import NotifyListener
 
 TIMEOUT = 5
 checker = Checker()
-connector = NotifyListener(checker, 'notify')
+connector = NotifyListener(checker, consumer_tag='notify')
 
 app = FastAPI()
 
