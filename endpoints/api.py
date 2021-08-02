@@ -1,5 +1,6 @@
 from json import dumps
 
+import aiohttp
 from fastapi import APIRouter, Depends
 from fastapi.responses import Response
 from pydantic import BaseModel
@@ -8,6 +9,7 @@ from STGB_backend.auth import get_current_active_user
 from config import Config
 from database import WebUser
 from utils.connector import Connector
+from utils.schema import MultipleUpdates
 
 router = APIRouter()
 ERROR = {"status": "error"}
@@ -44,7 +46,9 @@ def get_bots(current_user: WebUser = Depends(get_current_active_user)):
 @router.get("/{bot_id}/chats")
 def get_chats(bot_id: int, current_user: WebUser = Depends(get_current_active_user)):
     chats = current_user.get_chat(bot_id)
-    return {"bot_id": bot_id, "chats": [chat.to_dict_last() for chat in chats]}
+    if chats:
+        return {"bot_id": bot_id, "chats": [chat.to_dict_last() for chat in chats]}
+    return Response(status_code=403)
 
 
 @router.get("/messages/{chat_id}")
@@ -79,10 +83,15 @@ async def get_updates(chat_id: int, current_user: WebUser = Depends(get_current_
     # TODO: Add pagination
     messages = chat.get_all_messages()
     return {"chat_id": chat_id, "messages": [message.to_dict() for message in messages]}
-    # async with aiohttp.ClientSession() as session:
-    #     async with session.get(f"{Config.UPDATER_URL}/{user_id}/info") as response:
-    #
-    #         if response.status == 502:
-    #             return Response(status_code=502)
-    #         else:
-    #             return await response.json()
+
+
+@router.get("/updates", response_model=MultipleUpdates)
+async def get_all_updates(current_user: WebUser = Depends(get_current_active_user)):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(f"{Config.UPDATER_URL}/{current_user.uid}/info") as response:
+
+            if response.status == 502:
+                return Response(status_code=502)
+            else:
+                data = await response.json()
+                return MultipleUpdates(**data)

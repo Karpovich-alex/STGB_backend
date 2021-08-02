@@ -7,6 +7,7 @@ from fastapi.responses import Response
 from update_checker import Checker
 
 from utils.connector import NotifyListener
+from utils.schema import MultipleUpdates
 
 TIMEOUT = 5
 checker = Checker()
@@ -31,13 +32,13 @@ app.add_middleware(
 loop = None
 
 
-@app.get('/{user_id}/info')
+@app.get('/{user_id}/info', response_model=MultipleUpdates)
 async def subscribe(user_id: int):
     info = checker.get_info(user_id)
     if info:
         return info
 
-    current_info = checker.add_current_listener(user_id, loop)
+    current_info = checker.add_current_listener(user_id)
     result = asyncio.wait_for(current_info, TIMEOUT)
     try:
         return await result
