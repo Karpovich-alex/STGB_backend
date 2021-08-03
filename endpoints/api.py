@@ -9,7 +9,7 @@ from STGB_backend.auth import get_current_active_user
 from config import Config
 from database import WebUser
 from utils.connector import Connector
-from utils.schema import MultipleUpdates
+from utils.schema import MultipleUpdates, Update, Chat
 
 router = APIRouter()
 ERROR = {"status": "error"}
@@ -31,10 +31,25 @@ class Message(AcptMessage):
 connector = Connector("send", host=Config.RABBITMQ)
 
 
-@router.get("/bots")
-def get_bots(current_user: WebUser = Depends(get_current_active_user)):
-    bots_id = [b.id for b in current_user.bots]
-    return {"bots": bots_id}
+@router.get("/chats")
+def get_chats(current_user: WebUser = Depends(get_current_active_user)):
+    updates = [
+
+        Update(
+            bot_id=bot.id,
+            chats=[
+                Chat(
+                    user=chat.user,
+                    id=chat.id,
+                    messages=[chat.last_message])
+                for chat in current_user.get_chat(bot.id)
+            ]
+        )
+        for bot in current_user.bots
+    ]
+    return MultipleUpdates(
+        updates=updates
+    ).dict()
 
 
 # @router.get("/{bot_id}/users")
@@ -43,22 +58,30 @@ def get_bots(current_user: WebUser = Depends(get_current_active_user)):
 #     return {'support_users': [{'username': u.username, 'id': u.id} for u in support_users]}
 
 
-@router.get("/{bot_id}/chats")
-def get_chats(bot_id: int, current_user: WebUser = Depends(get_current_active_user)):
+@router.get("/{bot_id}/chats")  # , response_model=MultipleUpdates
+def get_bot_chats(bot_id: int, current_user: WebUser = Depends(get_current_active_user)):
     chats = current_user.get_chat(bot_id)
     if chats:
-        return {"bot_id": bot_id, "chats": [chat.to_dict_last() for chat in chats]}
+        return MultipleUpdates(
+            updates=[
+                Update(bot_id=bot_id, chats=[
+                    Chat(user=chat.user, id=chat.id, messages=[chat.last_message]) for chat in chats
+                ])
+            ]
+        ).dict()
     return Response(status_code=403)
 
 
-@router.get("/messages/{chat_id}")
-async def get_messages(chat_id: int, current_user: WebUser = Depends(get_current_active_user)):
-    chat = current_user.get_chat_by_id(chat_id)
-    if not chat:
+@router.get("/messages/{bot_id}/{chat_id}")
+async def get_messages(bot_id: int, chat_id: int, current_user: WebUser = Depends(get_current_active_user)):
+    if not (current_user.is_allowed(chat_id=chat_id) and current_user.is_allowed(bot_id=bot_id)):
         return Response(status_code=403)
+    chat = current_user.get_chat_by_id(chat_id)
+
     # TODO: Add pagination
     messages = chat.get_all_messages()
-    return {"chat_id": chat_id, "messages": [message.to_dict() for message in messages]}
+    return MultipleUpdates(updates=[Update(bot_id=bot_id, chats=[chat])]).dict()
+    # return {"chat_id": chat_id, "messages": [message.to_dict() for message in messages]}
 
 
 @router.post("/messages/{chat_id}")
@@ -75,17 +98,17 @@ async def send_message(chat_id: int, message: AcptMessage, current_user: WebUser
         return ERROR
 
 
-@router.get("/updates/{chat_id}")  # {user_id}
-async def get_updates(chat_id: int, current_user: WebUser = Depends(get_current_active_user)):
-    chat = current_user.get_chat_by_id(chat_id)
-    if not chat:
-        return Response(status_code=403)
-    # TODO: Add pagination
-    messages = chat.get_all_messages()
-    return {"chat_id": chat_id, "messages": [message.to_dict() for message in messages]}
+# @router.get("/updates/{chat_id}")  # {user_id}
+# async def get_updates(chat_id: int, current_user: WebUser = Depends(get_current_active_user)):
+#     chat = current_user.get_chat_by_id(chat_id)
+#     if not chat:
+#         return Response(status_code=403)
+#     # TODO: Add pagination
+#     messages = chat.get_all_messages()
+#     return {"chat_id": chat_id, "messages": [message.to_dict() for message in messages]}
 
-
-@router.get("/updates", response_model=MultipleUpdates)
+# TODO: apply responce model
+@router.get("/updates")  # , response_model=MultipleUpdates
 async def get_all_updates(current_user: WebUser = Depends(get_current_active_user)):
     async with aiohttp.ClientSession() as session:
         async with session.get(f"{Config.UPDATER_URL}/{current_user.uid}/info") as response:
@@ -94,4 +117,4 @@ async def get_all_updates(current_user: WebUser = Depends(get_current_active_use
                 return Response(status_code=502)
             else:
                 data = await response.json()
-                return MultipleUpdates(**data)
+                return MultipleUpdates(**data).dict()

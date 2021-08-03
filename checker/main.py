@@ -66,3 +66,13 @@ def stop_connector():
 
 
 uvicorn.run(app, host="0.0.0.0", port=8001)
+# if __name__ == '__main__':
+#     checker.add_listener(8)
+#     u = User(uid=1, username='user')
+#     m = Message(id=1, text='text', time=datetime.datetime(2021, 1, 1, 1, 1, 31),
+#                 user=u)
+#     chat = Chat(chat_id=1, messages=[m])
+#     u1 = Update(bot_id=1, chats=[chat])
+#     nu = NotifyUpdate(user_id=8, updates=[u1])
+#     mu = MultipleNotifyUpdates(updates=[nu])
+#     checker.add_information(mu)
