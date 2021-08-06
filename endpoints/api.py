@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from STGB_backend.auth import get_current_active_user
 from config import Config
 from database import WebUser
-from utils.connector import Connector
+from utils.connector import LazyConnector
 from utils.schema import MultipleUpdates, Update, Chat
 
 router = APIRouter()
@@ -28,7 +28,7 @@ class Message(AcptMessage):
         return dumps({"text": self.text, "chat_id": self.chat_id, "user_id": self.user_id})
 
 
-connector = Connector("send", host=Config.RABBITMQ)
+connector = LazyConnector("send", host=Config.RABBITMQ)
 
 
 @router.get("/chats")
