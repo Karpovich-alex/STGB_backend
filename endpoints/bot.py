@@ -11,8 +11,8 @@ router = APIRouter()
 webhook_worker = WebhookWorker()
 
 
-def get_bot(token, current_user: WebUser = Depends(get_current_active_user)):
-    bot = current_user.get_bot(token=token)
+def get_bot(api_token, current_user: WebUser = Depends(get_current_active_user)):
+    bot = current_user.get_bot(api_token=api_token)
     if not bot:
         raise HTTPException(status_code=400)
     return bot
@@ -44,11 +44,7 @@ async def start_bot(bot=Depends(get_bot)):
 
 @router.post('/{api_token}/delete')
 async def delete_bot(bot=Depends(get_bot)):
-    started = await webhook_worker.set_webhook(bot.token, bot.api_token)
-    if not started:
-        raise HTTPException(status_code=400)
-    else:
-        return Response(status_code=200)
+    pass
 
 
 @router.post('/add')
@@ -58,8 +54,6 @@ async def add_bot(bot_data: CreateBotData, current_user: WebUser = Depends(get_c
         raise HTTPException(status_code=400, detail='Incorrect bot token')
     bot = Bot(messenger=bot_data.messenger, nickname=bot_data.nickname, token=bot_data.token, messenger_id=bot_info.id,
               messenger_name=bot_info.username)
-    # if not created:
-    #     raise HTTPException(status_code=500)
     current_user.add_bot(bot)
     return ExportBot.from_orm(bot)
 

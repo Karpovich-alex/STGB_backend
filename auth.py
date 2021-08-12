@@ -33,7 +33,7 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    username: Optional[str] = None
+    username: str
 
 
 def verify_password(plain_password, hashed_password):
