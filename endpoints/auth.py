@@ -60,18 +60,11 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     return token
 
 
-# @router.get("/users/me/items/", response_model=v.WebUser)
-# async def read_own_items(current_user: v.WebUser = Depends(get_current_active_user)):
-#     return [{"item_id": "Foo", "owner": current_user.username}]
-
-
 @router.post("/register")
 async def register(new_user: RegistryUser):
     user = WebUser.create_user(new_user)
     if not user:
         raise credentials_exception
-
-    # return login_user(user.username, new_user.password)
     return status.HTTP_200_OK
 
 

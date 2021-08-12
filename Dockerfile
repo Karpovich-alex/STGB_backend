@@ -8,7 +8,7 @@ RUN pip install -r requirements.txt
 
 #RUN mkdir /database
 #RUN mkdir /utils
-COPY /STGB_backend .
+COPY /STGB_backend /STGB_backend
 COPY ../database /database
 COPY ../config.py config.py
 COPY ../utils /utils

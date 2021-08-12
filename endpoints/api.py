@@ -4,12 +4,12 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import Response
 from pydantic import BaseModel
 
-from STGB_backend.auth import get_current_active_user
-from STGB_backend.checker.update_checker import Updater
 from config import Config
 from database import WebUser
 from utils.aio_connector import AIONotifyListener, AIOConnector
 from utils.schema import MultipleUpdates, Update, Chat, WebMessage
+from .auth import get_current_active_user
+from ..checker import Updater
 
 router = APIRouter()
 updater = Updater()
